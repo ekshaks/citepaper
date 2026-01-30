@@ -16,6 +16,7 @@ Resolve paper keywords into verified BibTeX entries using web sources, returning
 - If the user specifies a preferred venue/version (e.g., ICLR, arXiv), prioritize that.
 - **Fast mode**: If the user includes `fast` or `mode:fast`, skip cross-checking and return the first authoritative BibTeX match.
 - **Source flags**: Allow `source:dblp`, `source:arxiv`, `source:openreview`, `source:acm`, `source:ieee`, `source:springer`. Use the specified source first.
+- **Session cache**: Cache the last resolved BibTeX entry, the candidate list (if any), and the primary source page reference. If the user is clearly referring to the last paper (e.g., "same paper", "that one", "give bibtex"), reuse the cached data and avoid new searches unless the request adds new constraints or changes the target paper.
 
 ### 2) Web lookup (required)
 - Use `web.run` search queries to find authoritative BibTeX entries.
@@ -26,11 +27,13 @@ Resolve paper keywords into verified BibTeX entries using web sources, returning
 - If a `source:` flag is provided, search that source first and prefer it over the default order.
 - Cross-check title, year, and authors across sources unless fast mode is enabled.
 - If a term looks unfamiliar or ambiguous, search explicitly for that term (even in fast mode if no clear match is found).
+- If the session cache applies, skip new searches and reuse the cached BibTeX entry or cached candidate list and source reference.
 
 ### 3) Candidate handling
 - If multiple plausible matches exist, present 2–4 concise options (title, venue, year, first author) and ask the user to choose.
 - Only proceed to finalize the BibTeX entry after the user selects a candidate.
 - In fast mode, if there is a single exact title match from the chosen source, skip disambiguation.
+- If the user selects a candidate, store it in the session cache for subsequent turns (BibTeX + candidate list + source reference).
 
 ### 4) Build the BibTeX entry
 - Required fields to include when available: `author`, `title`, `booktitle` or `journal`, `year`, `publisher`, `url`, `doi`, `pages`, `month`, and any standard venue-specific fields (e.g., `volume`, `number`).
